@@ -956,8 +956,8 @@ async function pushToGitHub(){
     // Always get fresh SHA from GitHub (never cache it)
     let sha = '';
     const getRes = await fetch(
-      `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}?t=${Date.now()}`,
-      { headers, cache: 'no-store' }
+      `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`,
+      { headers }
     );
     if(getRes.ok){
       const d = await getRes.json();
@@ -990,7 +990,7 @@ async function loadFromGitHub(){
   if(!token) return false;
   try {
     const headers = { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github.v3+json' };
-    const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`, { headers });
+    const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`, { headers, mode: 'cors' });
     if(!res.ok) return false;
     const d = await res.json();
     // Safe decode for Unicode/Japanese text
