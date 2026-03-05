@@ -118,10 +118,9 @@ body{font-family:'Noto Sans JP','Hiragino Sans','Yu Gothic',sans-serif;backgroun
 
 /* CARD — question side: light cream */
 .card-wrap{perspective:1400px;margin:6px 0;}
-.card{min-height:260px;position:relative;transform-style:preserve-3d;transition:transform .5s cubic-bezier(.22,.8,.22,1);cursor:pointer;}
+.card{min-height:320px;position:relative;transform-style:preserve-3d;transition:transform .5s cubic-bezier(.22,.8,.22,1);cursor:pointer;}
 .card.flipped{transform:rotateY(180deg);}
-.card-face{position:absolute;width:100%;min-height:260px;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:16px;padding:44px 22px 44px;display:flex;flex-direction:column;}
-.card-back{overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.card-face{position:absolute;width:100%;min-height:320px;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:16px;padding:44px 22px 44px;display:flex;flex-direction:column;}
 /* Question: warm off-white with green accent border */
 .card-front{background:#fffef9;border:2px solid #c8e6d5;}
 /* Answer: white with stronger green border */
@@ -133,7 +132,7 @@ body{font-family:'Noto Sans JP','Hiragino Sans','Yu Gothic',sans-serif;backgroun
 .card-no{position:absolute;top:13px;right:17px;font-size:12px;color:var(--light);}
 .card-qlabel{font-size:11px;font-weight:700;letter-spacing:1px;color:var(--mid);margin-bottom:8px;}
 .card-qtext{font-size:clamp(14px,3.2vw,17px);font-weight:700;line-height:1.75;color:var(--txt);white-space:pre-wrap;word-break:break-all;}
-.card-atext{font-size:clamp(12px,2.6vw,14px);line-height:1.9;color:var(--txt);white-space:pre-wrap;word-break:break-all;overflow-y:auto;max-height:160px;}
+.card-atext{font-size:clamp(12px,2.6vw,14px);line-height:1.9;color:var(--txt);white-space:pre-wrap;word-break:break-all;overflow-y:auto;max-height:220px;flex:1;}
 .card-atext::-webkit-scrollbar{width:3px;}
 .card-atext::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px;}
 .tap-hint{position:absolute;bottom:12px;left:0;width:100%;text-align:center;font-size:11px;color:var(--light);}
@@ -473,6 +472,14 @@ function init(){
   }
 }
 
+function toggleHist(title){
+  const h = hist[title];
+  if(h === true){ hist[title] = false; }       // 習得済み → 要復習
+  else if(h === false){ delete hist[title]; }   // 要復習 → 未回答
+  else { hist[title] = true; }                  // 未回答 → 習得済み
+  saveToStorage(); updStats(); renderList();
+}
+
 function updStats(){
   document.getElementById('sTot').textContent=allQ.length;
   document.getElementById('sMas').textContent=allQ.filter(q=>hist[q.title]===true).length;
@@ -544,9 +551,13 @@ function makeQItem(q,origI,num,cat){
   const d=document.createElement('div'); d.className='q-item';
   let catBadge='';
   if(cat){catBadge=`<span class="q-item-cat" style="background:${hexToRgba(cat.color,.12)};color:${cat.color}">${cat.name}</span>`;}
+  const histBtn = h===true ? `<button class="q-item-edit" onclick="event.stopPropagation();toggleHist('${q.title}')" title="習得済みを解除">🟢</button>`
+    : h===false ? `<button class="q-item-edit" onclick="event.stopPropagation();toggleHist('${q.title}')" title="要復習を解除">🔴</button>`
+    : `<button class="q-item-edit" onclick="event.stopPropagation();toggleHist('${q.title}')" title="習得済みにする" style="opacity:0.4">⚪</button>`;
   d.innerHTML=`
     <div class="q-item-num">${num}</div>
-    <div class="q-item-title">${dot} ${q.title}${catBadge}</div>
+    <div class="q-item-title">${q.title}${catBadge}</div>
+    ${histBtn}
     <button class="q-item-edit" onclick="event.stopPropagation();openEdit(${origI})" title="編集">✏️</button>
     <button class="q-item-del"  onclick="event.stopPropagation();delQ(${origI})"   title="削除">×</button>
   `;
