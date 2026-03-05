@@ -919,6 +919,21 @@ function schedulePush(){
   ghSyncTimer = setTimeout(pushToGitHub, 2000);
 }
 
+async function testEncoding(){
+  try {
+    const testData = {test: 'テスト', questions: [{title:'課税客体', q:'問題', a:'答え'}]};
+    const jsonStr = JSON.stringify(testData);
+    const encoder = new TextEncoder();
+    const bytes = encoder.encode(jsonStr);
+    let binary = '';
+    bytes.forEach(b => binary += String.fromCharCode(b));
+    const content = btoa(binary);
+    alert('エンコード成功: ' + content.substring(0,50) + '...');
+  } catch(e) {
+    alert('エンコードエラー: ' + e.message);
+  }
+}
+
 async function pushToGitHub(){
   const token = getGhToken();
   if(!token) return;
@@ -926,13 +941,18 @@ async function pushToGitHub(){
   if(status){ status.textContent = '⏳ 同期中...'; status.style.color = 'var(--mid)'; }
 
   const data = { questions: allQ, categories: cats, savedAt: new Date().toISOString() };
-  // Safe Base64 encoding for Unicode/Japanese text
   const jsonStr = JSON.stringify(data, null, 2);
-  const encoder = new TextEncoder();
-  const bytes = encoder.encode(jsonStr);
-  let binary = '';
-  bytes.forEach(b => binary += String.fromCharCode(b));
-  const content = btoa(binary);
+  // Encode to base64 via FileReader (most compatible with Safari/iOS)
+  const content = await new Promise((resolve, reject) => {
+    const blob = new Blob([jsonStr], {type: 'application/json'});
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result.split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
 
   try {
     const headers = {
@@ -970,7 +990,8 @@ async function pushToGitHub(){
     }
   } catch(e){
     console.error('GitHub sync error:', e);
-    if(status){ status.textContent = '❌ 同期失敗: ' + e.message; status.style.color = 'var(--red)'; }
+    const msg = e.message + (e.stack ? ' | ' + e.stack.split('\n')[1] : '');
+    if(status){ status.textContent = '❌ 同期失敗: ' + msg; status.style.color = 'var(--red)'; }
   }
 }
 
