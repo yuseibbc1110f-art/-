@@ -950,8 +950,7 @@ async function pushToGitHub(){
     const headers = {
       'Authorization': 'token ' + token,
       'Content-Type': 'application/json',
-      'Accept': 'application/vnd.github.v3+json',
-      'Cache-Control': 'no-cache'
+      'Accept': 'application/vnd.github.v3+json'
     };
     // Always get fresh SHA from GitHub (never cache it)
     let sha = '';
