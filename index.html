@@ -982,7 +982,12 @@ async function loadFromGitHub(){
     const res = await fetch(`https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`, { headers });
     if(!res.ok) return false;
     const d = await res.json();
-    const text = decodeURIComponent(escape(atob(d.content)));
+    // Safe decode for Unicode/Japanese text
+    const base64 = d.content.replace(/\s/g, '');
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for(let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    const text = new TextDecoder().decode(bytes);
     const data = JSON.parse(text);
     if(data.questions) allQ = data.questions;
     if(data.categories) cats = data.categories;
