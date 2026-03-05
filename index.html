@@ -952,17 +952,15 @@ async function pushToGitHub(){
       'Content-Type': 'application/json',
       'Accept': 'application/vnd.github.v3+json'
     };
-    // Always get fresh SHA from GitHub (never cache it)
+    // Always get fresh SHA - add timestamp to bypass Safari cache
     let sha = '';
-    const getRes = await fetch(
-      `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`,
-      { headers }
-    );
+    const shaUrl = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}?ref=main&_=${Date.now()}`;
+    const getRes = await fetch(shaUrl, { headers });
     if(getRes.ok){
       const d = await getRes.json();
       sha = d.sha || '';
     }
-    // 404 means file doesn't exist yet = first time, sha stays empty, that's OK
+    // 404 = file doesn't exist yet (first push), sha stays empty
 
     // Push file
     const body = { message: 'sync data', content };
